@@ -27,8 +27,8 @@ dependencies {
 }
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.1"
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
 
     sourceSets {
         main {
@@ -125,4 +125,15 @@ afterEvaluate { project ->
         required { isReleaseBuild() && gradle.taskGraph.hasTask("uploadArchives") }
         sign configurations.archives
     }
+}
+
+android.libraryVariants.all { variant ->
+  def name = variant.buildType.name
+  if (name.equals(com.android.builder.core.BuilderConstants.DEBUG)) {
+    return; // Skip debug builds.
+  }
+  def task = project.tasks.create "jar${name.capitalize()}", Jar
+  task.dependsOn variant.javaCompile
+  task.from variant.javaCompile.destinationDir
+  artifacts.add('archives', task);
 }
