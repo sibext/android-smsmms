@@ -265,13 +265,15 @@ public class Transaction {
                         Log.e(TAG, "exception thrown", e);
 
                         try {
-                            ((Activity) context).getWindow().getDecorView().findViewById(android.R.id.content).post(new Runnable() {
+                            if(context instanceof Activity) {
+                                ((Activity) context).getWindow().getDecorView().findViewById(android.R.id.content).post(new Runnable() {
 
-                                @Override
-                                public void run() {
-                                    Toast.makeText(context, "Message could not be sent", Toast.LENGTH_LONG).show();
-                                }
-                            });
+                                    @Override
+                                    public void run() {
+                                        Toast.makeText(context, "Message could not be sent", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            }
                         } catch (Exception f) { }
                     }
                 }
@@ -920,20 +922,21 @@ public class Transaction {
                 context.getContentResolver().update(Uri.parse("content://mms"), values, where, null);
             }
         }
+        if(context instanceof Activity) {
+            ((Activity) context).getWindow().getDecorView().findViewById(android.R.id.content).post(new Runnable() {
 
-        ((Activity) context).getWindow().getDecorView().findViewById(android.R.id.content).post(new Runnable() {
+                @Override
+                public void run() {
+                    context.sendBroadcast(new Intent(REFRESH));
+                    context.sendBroadcast(new Intent(NOTIFY_SMS_FAILURE));
 
-            @Override
-            public void run() {
-                context.sendBroadcast(new Intent(REFRESH));
-                context.sendBroadcast(new Intent(NOTIFY_SMS_FAILURE));
+                    // broadcast that mms has failed and you can notify user from there if you would like
+                    context.sendBroadcast(new Intent(MMS_ERROR));
 
-                // broadcast that mms has failed and you can notify user from there if you would like
-                context.sendBroadcast(new Intent(MMS_ERROR));
+                }
 
-            }
-
-        });
+            });
+        }
     }
 
     private void sendVoiceMessage(final String destAddr, final String text) {
